@@ -6,7 +6,7 @@ import os
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
-url = 'http://localhost:3000'
+url = 'http://localhost:8501'
 
 sp = spotipy.Spotify(
     auth_manager=SpotifyOAuth(
@@ -17,18 +17,26 @@ sp = spotipy.Spotify(
     )
 )
 
-
-st.set_page_config(page_title = 'PlaceHolder Name', page_icon='🎧')
+st.set_page_config(page_title='PlaceHolder Name')
 st.title('blah blah blah')
 st.write('hello hello hello')
-topTracks = sp.current_user_top_tracks(limit=50, time_range='medium_term')
+
+# Fetch top tracks
+topTracks = sp.current_user_top_tracks(limit=20, time_range='short_term')
 trackIds = [track['id'] for track in topTracks['items']]
-audio_features = sp.audio_features(trackIds)
 
-df = pd.DataFrame(audio_features)
-df['track_name'] = [track['name'] for track in topTracks['items']]
-df = df[['track_name', 'danceability', 'energy', 'valence']]
-df.set_index('track_name', inplace=True)
+# Validate track IDs
+if not trackIds:
+    st.error("No top tracks found. Please ensure your Spotify account has sufficient listening history.")
+else:
+    try:
+        # Create dataframe
+        df['track_name'] = [track['name'] for track in topTracks['items']]
+        df = df[['track_name', 'danceability', 'energy', 'valence']]
+        df.set_index('track_name', inplace=True)
 
-st.subheader('Audio Features for Top Tracks')
-st.bar_chart(df, height=1000)
+        # Display bar chart
+        st.subheader('Spotify Song Suggester')
+        st.bar_chart(df, height=500)
+    except Exception as e:
+        st.error(f"An error occurred while fetching audio features: {e}")
