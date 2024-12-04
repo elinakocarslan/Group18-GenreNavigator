@@ -1,5 +1,3 @@
-flask
-flask-cors
-numpy
-scipy
-PyDictionary
+version https://git-lfs.github.com/spec/v1
+oid sha256:389100947a377bff53f7db125dafb382c4efc42e0a43bf46ac2c1f54168604f8
+size 42
