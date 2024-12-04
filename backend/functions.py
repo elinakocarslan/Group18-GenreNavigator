@@ -1,18 +1,66 @@
 import numpy as np
+import heapq
 from scipy.spatial.distance import cosine
 from PyDictionary import PyDictionary
 import nltk
 nltk.download('wordnet')
 from nltk.corpus import wordnet as wn
 
+
 def get_synonyms(word):
-    synonyms = dictionary.synonym(word) or []
-    return synonyms
+    synonyms = set()
+    synsets = wn.synsets(word, lang='eng')
+    if not synsets:
+        return []
+
+    for synset in synsets:
+        for lemma in synset.lemmas():
+            synonym = lemma.name()
+            if synonym.isalpha() and synonym.lower() != word.lower():
+                synonyms.add(synonym.replace("_", " "))
+    return list(synonyms)
+
 
 def is_synonym(guess, target_word):
     synonyms = get_synonyms(target_word)
     return guess in synonyms
 
+def build_synonym_graph(word, embeddings):
+    synonyms = get_synonyms(word)
+    if not synonyms:
+        print(f"No synonyms to build graph for {word}")
+        return {}  
+    graph = {}
+    for synonym1 in synonyms:
+        graph[synonym1] = []
+        for synonym2 in synonyms:
+            if synonym1 != synonym2:
+                if synonym1 in embeddings and synonym2 in embeddings:
+                    dist = calculate_similarity(synonym1, synonym2, embeddings, weight_glove=0.5, weight_wordnet=0.5)
+                    graph[synonym1].append((dist, synonym2))
+    return graph
+
+
+
+def dijkstra(graph, start):
+    pq = [(0, start)]  
+    distances = {node: float('inf') for node in graph}
+    distances[start] = 0
+
+    while pq:
+        current_distance, current_node = heapq.heappop(pq)
+
+        if current_distance > distances[current_node]:
+            continue
+
+        for neighbor_distance, neighbor in graph[current_node]:
+            distance = current_distance + neighbor_distance
+
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                heapq.heappush(pq, (distance, neighbor))
+
+    return distances
 
 def LoadGlove(filepath):
     embeddings = {}
@@ -27,7 +75,7 @@ def LoadGlove(filepath):
 glove_file = "/Users/Jonathan/Downloads/glove.6B.50d.txt"
 embeddings = LoadGlove(glove_file)
 
-def calculate_similarity(word1, word2, embeddings, weight_glove=0.8, weight_wordnet=0.2):
+def calculate_similarity(word1, word2, embeddings, weight_glove=0.5, weight_wordnet=0.5):
     
     if word1 not in embeddings or word2 not in embeddings:
         glove_similarity = None  
@@ -35,7 +83,6 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.8, weight_word
         vec1 = embeddings[word1]
         vec2 = embeddings[word2]
         glove_similarity = 1 - cosine(vec1, vec2)
-        print(glove_similarity)
 
     synsets1 = wn.synsets(word1)
     synsets2 = wn.synsets(word2)
@@ -46,8 +93,6 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.8, weight_word
     synset2 = synsets2[0]
 
     wordnet_similarity = synset1.path_similarity(synset2)
-    print(wordnet_similarity)
-
    
     if glove_similarity is None and wordnet_similarity == 0:
         return 1000 
@@ -57,8 +102,6 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.8, weight_word
     elif wordnet_similarity == 0:
         combined_similarity = glove_similarity
     else:
-        print(weight_glove * glove_similarity)
-        print(weight_wordnet * wordnet_similarity)
         combined_similarity = (weight_glove * glove_similarity) + (weight_wordnet * wordnet_similarity)
 
     if combined_similarity == 1: 
@@ -67,75 +110,66 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.8, weight_word
         return 1000
     else:
         if(is_synonym(word1,word2)):
-            graded_score = int((1-combined_similarity) * 1000)-150
+            graded_score = int((1-combined_similarity) * 1000)/2 - 50
         else:
             graded_score = int((1-combined_similarity) * 1000)
-        
-        
+
         return graded_score
 
 
 dictionary = PyDictionary()
 
-def find_top_similar_words(guess, words, embeddings, top_n=3):
-    """Find the top N most similar words to the guessed word."""
-    if guess not in embeddings:
-        return []
-
-    guess_vector = embeddings[guess]
-    similarities = []
-
-    for word in words:
-        if word in embeddings:
-            similarity = 1 - cosine(guess_vector, embeddings[word])
-            similarities.append((word, similarity))
-
-    # Sort by similarity in descending order
-    similarities = sorted(similarities, key=lambda x: x[1], reverse=True)
-
-    # Return the top N similar words
-    return [word for word, sim in similarities[:top_n]]
-
 
 def get_hints(word):
-    synonyms = dictionary.synonym(word) or []
-    definition = dictionary.meaning(word)
-    return synonyms, definition
+    synonyms = get_synonyms(word)
+    print(synonyms)
+    if not synonyms:
+        return "No synonyms available."
+    
+    graph = build_synonym_graph(word, embeddings)
+
+    if word not in graph:
+        word = synonyms[0] 
+
+    distances = dijkstra(graph, word)
+    closest_synonym = min(distances, key=distances.get)  
+    return closest_synonym
+
+
 
 
 import random
 
-# Load a list of valid words
 with open("words.txt", "r") as f:
     words = [line.strip() for line in f.readlines() if line.strip() in embeddings]
 
-# Choose a random target word
 target_word = random.choice(words)
+while(len(get_synonyms(target_word)) == 0):
+    target_word = random.choice(words)
+print(target_word)
 
-# Generate hints
-synonyms, definition = get_hints(target_word)
 
 def play_contexto():
     print("Welcome to Contexto!")
     print("Try to guess the target word. Similarity scores indicate closeness.")
     print(f"Hint: The target word has {len(target_word)} letters.")
 
-    if definition:
-        print(f"Definition: {list(definition.values())[0][0]}")
-
-    if synonyms:
-        print(f"Synonyms (hidden for now): {len(synonyms)} synonyms available.")
-
     attempts = 0
-
+    hintWord = target_word
     while True:
+
         guess = input("Enter your guess: ").strip().lower()
         if guess not in embeddings:
             print("Invalid word or not in vocabulary. Try again.")
             continue
 
         similarity = calculate_similarity(guess, target_word, embeddings)
-        print(f"Your guess: {guess}, Similarity: {similarity:.4f}")
+        if guess == "hint":
+            word = get_hints(hintWord)
+            hintWord = word
+            print(f"Hint: {word}, Similarity: {calculate_similarity(word, target_word, embeddings)}")
+        else:
+            print(f"Your guess: {guess}, Similarity: {similarity:.4f}")
 
         attempts += 1
 
