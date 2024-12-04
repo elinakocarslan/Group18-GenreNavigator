@@ -8,7 +8,6 @@ from PyDictionary import PyDictionary
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
-# Load GloVe embeddings
 def LoadGlove(filepath):
     embeddings = {}
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -20,12 +19,10 @@ def LoadGlove(filepath):
     return embeddings
 
 glove_file = "backend/glove.6B.50d.txt"
- # Correct path to the file
 
 embeddings = LoadGlove(glove_file)
 
 def calculate_similarity(word1, word2, embeddings):
-    """Calculate cosine similarity between two words using GloVe embeddings."""
     if word1 not in embeddings or word2 not in embeddings:
         return 0.0  # Return 0 if a word is not in vocabulary
     vec1 = embeddings[word1]
@@ -33,7 +30,6 @@ def calculate_similarity(word1, word2, embeddings):
     similarity = 1 - cosine(vec1, vec2)  # Cosine similarity
     return similarity
 
-# API route to get a random word and its hints
 @app.route('/start_game', methods=['GET'])
 def start_game():
     dictionary = PyDictionary()
@@ -49,7 +45,6 @@ def start_game():
         'synonyms': synonyms
     })
 
-# API route to calculate similarity between guess and target word
 @app.route('/guess', methods=['POST'])
 def guess_word():
     data = request.json
