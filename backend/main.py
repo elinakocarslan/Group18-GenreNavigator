@@ -6,7 +6,9 @@ import random
 from PyDictionary import PyDictionary
 
 app = Flask(__name__)
-CORS(app,  origins="http://localhost:5175") 
+# CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
+# CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Load GloVe embeddings
 def LoadGlove(filepath):
@@ -19,7 +21,7 @@ def LoadGlove(filepath):
             embeddings[word] = vector
     return embeddings
 
-glove_file = "glove.6B.50d.txt"
+glove_file = "backend/glove.6B.50d.txt"
  # Correct path to the file
 
 embeddings = LoadGlove(glove_file)
@@ -36,8 +38,9 @@ def calculate_similarity(word1, word2, embeddings):
 # API route to get a random word and its hints
 @app.route('/start_game', methods=['GET'])
 def start_game():
+    print(f"Request received from {request.remote_addr}")
     dictionary = PyDictionary()
-    with open("words.txt", "r") as f:
+    with open("backend/words.txt", "r") as f:
         words = [line.strip() for line in f.readlines() if line.strip() in embeddings]
 
     target_word = random.choice(words)
