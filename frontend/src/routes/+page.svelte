@@ -50,6 +50,7 @@
   <h1>Contexto Game</h1>
   <p>Try to guess the target word!</p>
   <p>Hint: The target word has {targetWord.length} letters.</p>
+  
 
   {#if definition}
     <p><strong>Definition:</strong> {definition}</p>
