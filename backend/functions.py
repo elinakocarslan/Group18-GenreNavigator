@@ -5,6 +5,9 @@ import nltk
 nltk.download('wordnet')
 from nltk.corpus import wordnet as wn
 
+def get_synonyms(word):
+    synonyms = dictionary.synonym(word) or []
+    return synonyms
 
 def is_synonym(guess, target_word):
     synonyms = get_synonyms(target_word)
@@ -141,5 +144,4 @@ def play_contexto():
             break
     
 
-# Start the game
 play_contexto()
