@@ -10,23 +10,27 @@
   
     // Fetch the game details when the component mounts
     onMount(async () => {
-  //     try {
-  //   const res = await fetch('http://localhost:5000/start_game');
-  //   const data = await res.json();
-  //   targetWord = data.target_word;
-  //   definition = data.definition;
-  //   synonyms = data.synonyms;
-  // } catch (error) {
-  //   console.error('Error fetching game data:', error);
-  // }
-  // try {
-  //   const res = await fetch('http://localhost:5000/start_game', {
-  //     method: 'GET',  // Ensure you are sending the GET request correctly
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Accept': 'application/json', // Specify expected response type
-  //     },
-  //   });
+  try {
+    const res = await fetch('http://localhost:5000/start_game', {
+      method: 'GET', 
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',  // Specify expected response type
+      },
+      mode: 'no-cors',
+    });
+    if (res.ok) {
+      const data = await res.json();
+      targetWord = data.target_word;
+      definition = data.definition;
+      synonyms = data.synonyms;
+    } else {
+      console.error("Failed to fetch the game data:", res.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching game data:', error);
+  }
+});
   //   if (res.ok) {
   //     const data = await res.json();
   //     targetWord = data.target_word;
@@ -39,12 +43,12 @@
   //   console.error('Error fetching game data:', error);
   // }
 //});
-      const res = await fetch('http://localhost:5000/start_game');  // Ensure this URL is correct
-      const data = await res.json();
-      targetWord = data.target_word;
-      definition = data.definition;
-      synonyms = data.synonyms;
-    });
+    //   const res = await fetch('http://localhost:5000/start_game');  // Ensure this URL is correct
+    //   const data = await res.json();
+    //   targetWord = data.target_word;
+    //   definition = data.definition;
+    //   synonyms = data.synonyms;
+    // });
   
     // Submit the user's guess to the backend
     async function submitGuess() {
