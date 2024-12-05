@@ -62,6 +62,18 @@ def dijkstra(graph, start):
 
     return distances
 
+def bellman_ford(graph, start):
+    distances = {node: float('inf') for node in graph}
+    distances[start] = 0
+
+    for _ in range(len(graph) - 1):
+        for node in graph:
+            for weight, neighbor in graph[node]:
+                if distances[node] + weight < distances[neighbor]:
+                    distances[neighbor] = distances[node] + weight
+
+    return distances
+
 def LoadGlove(filepath):
     embeddings = {}
     with open(filepath, 'r', encoding = 'utf-8') as f:
@@ -120,6 +132,26 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.5, weight_word
 dictionary = PyDictionary()
 
 
+# def get_hints(word, target):
+#     synonyms = get_synonyms(word)
+#     if not synonyms:
+#         return "No synonyms available."
+
+#     graph = build_synonym_graph(word, embeddings)
+#     if word not in graph:
+#         word = synonyms[0]
+
+#     distances = dijkstra(graph, word)
+#     sorted_distances = sorted((dist, synonym) for synonym, dist in distances.items() if synonym != word and synonym != target)
+#     if not sorted_distances:
+#         return "No valid hints available."
+
+#     closest_synonym = sorted_distances[0][1]
+#     return closest_synonym
+
+
+##get hints for bellman ford
+
 def get_hints(word, target):
     synonyms = get_synonyms(word)
     if not synonyms:
@@ -129,7 +161,12 @@ def get_hints(word, target):
     if word not in graph:
         word = synonyms[0]
 
-    distances = dijkstra(graph, word)
+    try:
+        distances = bellman_ford(graph, word)
+    except ValueError as e:
+        print(f"Error in graph: {e}")
+        return "No valid hints available."
+
     sorted_distances = sorted((dist, synonym) for synonym, dist in distances.items() if synonym != word and synonym != target)
     if not sorted_distances:
         return "No valid hints available."
