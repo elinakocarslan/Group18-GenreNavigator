@@ -136,8 +136,10 @@
   <p>Total Guesses: {numberOfGuesses}</p>
 
   {#if gameOver}
-    <!-- Game Over or Congratulations screen -->
     <div class="congrats">
+      {#if gameWon}
+      <h2>Congrats!</h2>
+      {/if}
       <p>The target word was: <strong>{targetWord}</strong></p>
       {#if !gameWon}
         <p>You gave up after {numberOfGuesses} guesses!</p>

@@ -95,10 +95,21 @@ target_word = random.choice(words)
 while len(get_synonyms(target_word)) < 2:
     target_word = random.choice(words)
 
+def get_new_target_word():
+    with open("backend/words.txt", "r") as f:
+        words = [line.strip() for line in f.readlines() if line.strip() in embeddings]
+    
+    target_word = random.choice(words)
+    while len(get_synonyms(target_word)) < 2:
+        target_word = random.choice(words)
+    
+    return target_word
+    
 # Flask route to start the game
 @app.route('/start_game', methods=['GET'])
 def start_game():
-    definition = "Definition of the word"  # Add logic for definition if needed
+    definition = "Definition of the word"
+    target_word = get_new_target_word()
     synonyms = get_synonyms(target_word)
     return jsonify({
         'target_word': target_word,
