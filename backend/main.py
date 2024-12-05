@@ -148,6 +148,12 @@ while len(get_synonyms(target_word)) == 0:
 
 print(target_word)
 
+def get_random_synonym(word):
+    synonyms = get_synonyms(word)
+    if synonyms:
+        return random.choice(synonyms)  # Return a random synonym
+    return "No synonyms available"
+
 # Flask route to start the game and provide the target word and hints
 @app.route('/start_game', methods=['GET'])
 def start_game():
@@ -168,6 +174,13 @@ def guess_word():
     return jsonify({
         'similarity': similarity
     })
+
+@app.route('/hint', methods=['GET'])
+def hint():
+    data = request.json
+    target_word = data.get('target_word')
+    synonym = get_random_synonym(target_word)
+    return jsonify({'hint': synonym})
 
 @app.before_request
 def handle_preflight():

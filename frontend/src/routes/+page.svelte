@@ -7,6 +7,7 @@
   let guess = '';
   let similarity = 0;
   let message = '';
+  let hintMessage = '';
   
   onMount(async () => {
     try {
@@ -31,6 +32,17 @@
   }
 });
 
+async function getHint() {
+  const res = await fetch('/hint', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  });
+  const data = await res.json();
+    hintMessage = data.hint;
+  }
 
 async function submitGuess() {
   const res = await fetch('/guess', {  // No need for full URL
@@ -41,45 +53,84 @@ async function submitGuess() {
 
     const data = await res.json();
     similarity = data.similarity;
-    message = similarity > 0.5 ? "Good guess!" : "Try again!";
+    message = similarity > 0.5 ? "Try Again!" : "Good Guess!";
   }
 </script>
   
 <main>
   <h1>Contexto Game</h1>
-  <p>Try to guess the target word!</p>
-  <p>Hint: The target word has {targetWord.length} letters.</p>
+  <p class="hint">Try to guess the target word!</p>
 
-
-  {#if definition}
-    <p><strong>Definition:</strong> {definition}</p>
-  {/if}
-
-  {#if synonyms.length > 0}
-    <p><strong>Synonyms (hidden for now):</strong> {synonyms.length} synonyms available.</p>
-  {/if}
 
   <input type="text" bind:value={guess} placeholder="Enter your guess" />
   <button on:click={submitGuess}>Submit Guess</button>
-
+  {#if message}
   <p>{message}</p>
+  {/if}
+
+  <button on:click={getHint}>Get a Hint</button>
+  {#if hintMessage}
+    <p><strong>Hint:</strong> {hintMessage}</p>
+  {/if}
+  
   <p>Similarity Score: {similarity}</p>
 </main>
 
 <style>
   main {
     text-align: center;
-    margin-top: 50px;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    width: 400px;
+    margin: 0 auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  h1 {
+    font-size: 32px;
+    color: #333;
+  }
+
+  p {
+    font-size: 16px;
+    color: #555;
+  }
+
+  .hint {
+    font-weight: bold;
+    color: #007BFF;
   }
 
   input {
-    padding: 10px;
-    font-size: 16px;
+    padding: 12px;
+    font-size: 18px;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
   }
 
   button {
-    padding: 10px;
+    padding: 12px 20px;
     font-size: 16px;
     cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  p:last-child {
+    font-weight: bold;
+    font-size: 18px;
+    color: #333;
   }
 </style>
