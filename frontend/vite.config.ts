@@ -5,8 +5,9 @@ export default defineConfig({
   plugins: [sveltekit()],
   server: {
     proxy: {
-      '/start_game': 'http://127.0.0.1:5000', 
-      '/guess': 'http://127.0.0.1:5000',  
+      '/start_game': 'http://127.0.0.1:5000',
+      '/guess': 'http://127.0.0.1:5000',
+      '/hint': 'http://127.0.0.1:5000',  // Ensure /hint is also proxied correctly
     },
   },
 });
