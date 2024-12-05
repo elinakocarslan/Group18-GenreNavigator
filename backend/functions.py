@@ -120,22 +120,22 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.5, weight_word
 dictionary = PyDictionary()
 
 
-def get_hints(word):
+def get_hints(word, target):
     synonyms = get_synonyms(word)
-    print(synonyms)
     if not synonyms:
         return "No synonyms available."
-    
-    graph = build_synonym_graph(word, embeddings)
 
+    graph = build_synonym_graph(word, embeddings)
     if word not in graph:
-        word = synonyms[0] 
+        word = synonyms[0]
 
     distances = dijkstra(graph, word)
-    closest_synonym = min(distances, key=distances.get)  
+    sorted_distances = sorted((dist, synonym) for synonym, dist in distances.items() if synonym != word and synonym != target)
+    if not sorted_distances:
+        return "No valid hints available."
+
+    closest_synonym = sorted_distances[0][1]
     return closest_synonym
-
-
 
 
 import random
@@ -144,28 +144,38 @@ with open("words.txt", "r") as f:
     words = [line.strip() for line in f.readlines() if line.strip() in embeddings]
 
 target_word = random.choice(words)
-while(len(get_synonyms(target_word)) == 0):
+
+while(len(get_synonyms(target_word)) < 2):
     target_word = random.choice(words)
 print(target_word)
 
 
 def play_contexto():
     print("Welcome to Contexto!")
-    print("Try to guess the target word. Similarity scores indicate closeness.")
-    print(f"Hint: The target word has {len(target_word)} letters.")
+    print("Try to guess the target word. Similarity scores indicate closeness, the lower the closer.")
 
     attempts = 0
+    
     hintWord = target_word
     while True:
 
         guess = input("Enter your guess: ").strip().lower()
+
+        if guess == "give up":
+            print(f"The word was {target_word}")
+            break
+
         if guess not in embeddings:
             print("Invalid word or not in vocabulary. Try again.")
             continue
 
         similarity = calculate_similarity(guess, target_word, embeddings)
+
+
         if guess == "hint":
-            word = get_hints(hintWord)
+            word = get_hints(hintWord, target_word)
+            if(word == target_word):
+                word = get_hints(word, target_word)
             hintWord = word
             print(f"Hint: {word}, Similarity: {calculate_similarity(word, target_word, embeddings)}")
         else:
