@@ -62,6 +62,18 @@ def dijkstra(graph, start):
 
     return distances
 
+def bellman_ford(graph, start):
+    distances = {node: float('inf') for node in graph}
+    distances[start] = 0
+
+    for _ in range(len(graph) - 1):
+        for node in graph:
+            for weight, neighbor in graph[node]:
+                if distances[node] + weight < distances[neighbor]:
+                    distances[neighbor] = distances[node] + weight
+
+    return distances
+
 def LoadGlove(filepath):
     embeddings = {}
     with open(filepath, 'r', encoding = 'utf-8') as f:
@@ -110,7 +122,10 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.5, weight_word
         return 1000
     else:
         if(is_synonym(word1,word2)):
-            graded_score = int((1-combined_similarity) * 1000)/2 - 50
+            if (int((1-combined_similarity) * 1000)/2 - 50 < 0):
+                graded_score = 2
+            else:
+                graded_score = int((1-combined_similarity) * 1000)/2 - 50
         else:
             graded_score = int((1-combined_similarity) * 1000)
 
@@ -119,6 +134,26 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.5, weight_word
 
 dictionary = PyDictionary()
 
+
+# def get_hints(word, target):
+#     synonyms = get_synonyms(word)
+#     if not synonyms:
+#         return "No synonyms available."
+
+#     graph = build_synonym_graph(word, embeddings)
+#     if word not in graph:
+#         word = synonyms[0]
+
+#     distances = dijkstra(graph, word)
+#     sorted_distances = sorted((dist, synonym) for synonym, dist in distances.items() if synonym != word and synonym != target)
+#     if not sorted_distances:
+#         return "No valid hints available."
+
+#     closest_synonym = sorted_distances[0][1]
+#     return closest_synonym
+
+
+##get hints for bellman ford
 
 def get_hints(word, target):
     synonyms = get_synonyms(word)
@@ -129,7 +164,12 @@ def get_hints(word, target):
     if word not in graph:
         word = synonyms[0]
 
-    distances = dijkstra(graph, word)
+    try:
+        distances = bellman_ford(graph, word)
+    except ValueError as e:
+        print(f"Error in graph: {e}")
+        return "No valid hints available."
+
     sorted_distances = sorted((dist, synonym) for synonym, dist in distances.items() if synonym != word and synonym != target)
     if not sorted_distances:
         return "No valid hints available."
@@ -155,30 +195,34 @@ def play_contexto():
     print("Try to guess the target word. Similarity scores indicate closeness, the lower the closer.")
 
     attempts = 0
-    
     hintWord = target_word
-    while True:
+    previous_guesses = set()  
 
+    while True:
         guess = input("Enter your guess: ").strip().lower()
 
         if guess == "give up":
             print(f"The word was {target_word}")
             break
+        if guess != "hint":
+            if guess in previous_guesses:
+                print(f"You've already guessed '{guess}'. Try something different!")
+                continue
 
         if guess not in embeddings:
             print("Invalid word or not in vocabulary. Try again.")
             continue
 
-        similarity = calculate_similarity(guess, target_word, embeddings)
-
+        previous_guesses.add(guess)
 
         if guess == "hint":
             word = get_hints(hintWord, target_word)
-            if(word == target_word):
+            if word == target_word:
                 word = get_hints(word, target_word)
             hintWord = word
             print(f"Hint: {word}, Similarity: {calculate_similarity(word, target_word, embeddings)}")
         else:
+            similarity = calculate_similarity(guess, target_word, embeddings)
             print(f"Your guess: {guess}, Similarity: {similarity:.4f}")
 
         attempts += 1
@@ -186,6 +230,6 @@ def play_contexto():
         if guess == target_word:
             print(f"Congratulations! You guessed the word in {attempts} attempts.")
             break
-    
+
 
 play_contexto()
