@@ -122,7 +122,10 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.5, weight_word
         return 1000
     else:
         if(is_synonym(word1,word2)):
-            graded_score = int((1-combined_similarity) * 1000)/2 - 50
+            if (int((1-combined_similarity) * 1000)/2 - 50 < 0):
+                graded_score = 2
+            else:
+                graded_score = int((1-combined_similarity) * 1000)/2 - 50
         else:
             graded_score = int((1-combined_similarity) * 1000)
 
@@ -192,30 +195,34 @@ def play_contexto():
     print("Try to guess the target word. Similarity scores indicate closeness, the lower the closer.")
 
     attempts = 0
-    
     hintWord = target_word
-    while True:
+    previous_guesses = set()  
 
+    while True:
         guess = input("Enter your guess: ").strip().lower()
 
         if guess == "give up":
             print(f"The word was {target_word}")
             break
+        if guess != "hint":
+            if guess in previous_guesses:
+                print(f"You've already guessed '{guess}'. Try something different!")
+                continue
 
         if guess not in embeddings:
             print("Invalid word or not in vocabulary. Try again.")
             continue
 
-        similarity = calculate_similarity(guess, target_word, embeddings)
-
+        previous_guesses.add(guess)
 
         if guess == "hint":
             word = get_hints(hintWord, target_word)
-            if(word == target_word):
+            if word == target_word:
                 word = get_hints(word, target_word)
             hintWord = word
             print(f"Hint: {word}, Similarity: {calculate_similarity(word, target_word, embeddings)}")
         else:
+            similarity = calculate_similarity(guess, target_word, embeddings)
             print(f"Your guess: {guess}, Similarity: {similarity:.4f}")
 
         attempts += 1
@@ -223,6 +230,6 @@ def play_contexto():
         if guess == target_word:
             print(f"Congratulations! You guessed the word in {attempts} attempts.")
             break
-    
+
 
 play_contexto()
