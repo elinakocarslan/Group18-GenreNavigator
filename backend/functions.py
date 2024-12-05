@@ -6,7 +6,6 @@ import nltk
 nltk.download('wordnet')
 from nltk.corpus import wordnet as wn
 
-
 def get_synonyms(word):
     synonyms = set()
     synsets = wn.synsets(word, lang='eng')
@@ -19,7 +18,6 @@ def get_synonyms(word):
             if synonym.isalpha() and synonym.lower() != word.lower():
                 synonyms.add(synonym.replace("_", " "))
     return list(synonyms)
-
 
 def is_synonym(guess, target_word):
     synonyms = get_synonyms(target_word)
@@ -41,10 +39,12 @@ def build_synonym_graph(word, embeddings):
     return graph
 
 
-
 def dijkstra(graph, start):
     pq = [(0, start)]  
-    distances = {node: float('inf') for node in graph}
+    distances = {}
+    for node in graph:
+        distances[node] = float('inf')
+
     distances[start] = 0
 
     while pq:
@@ -63,10 +63,13 @@ def dijkstra(graph, start):
     return distances
 
 def bellman_ford(graph, start):
-    distances = {node: float('inf') for node in graph}
+    distances = {}
+    for node in graph:
+        distances[node] = float('inf')
+
     distances[start] = 0
 
-    for _ in range(len(graph) - 1):
+    for i in range(len(graph) - 1):
         for node in graph:
             for weight, neighbor in graph[node]:
                 if distances[node] + weight < distances[neighbor]:
@@ -76,8 +79,8 @@ def bellman_ford(graph, start):
 
 def LoadGlove(filepath):
     embeddings = {}
-    with open(filepath, 'r', encoding = 'utf-8') as f:
-        for line in f:
+    with open(filepath, 'r', encoding = 'utf-8') as file:
+        for line in file:
             values = line.split()
             word = values[0]
             vector = np.asarray(values[1:], dtype='float32')
@@ -121,8 +124,8 @@ def calculate_similarity(word1, word2, embeddings, weight_glove=0.5, weight_word
     elif combined_similarity < 0: 
         return 1000
     else:
-        if(is_synonym(word1,word2)):
-            if (int((1-combined_similarity) * 1000)/2 - 50 < 0):
+        if is_synonym(word1,word2):
+            if int((1-combined_similarity) * 1000)/2 - 50 < 0:
                 graded_score = 2
             else:
                 graded_score = int((1-combined_similarity) * 1000)/2 - 50
@@ -166,8 +169,8 @@ def get_hints(word, target):
 
     try:
         distances = bellman_ford(graph, word)
-    except ValueError as e:
-        print(f"Error in graph: {e}")
+    except ValueError as err:
+        print(f"Error in graph: {err}")
         return "No valid hints available."
 
     sorted_distances = sorted((dist, synonym) for synonym, dist in distances.items() if synonym != word and synonym != target)
@@ -180,8 +183,8 @@ def get_hints(word, target):
 
 import random
 
-with open("words.txt", "r") as f:
-    words = [line.strip() for line in f.readlines() if line.strip() in embeddings]
+with open("words.txt", "r") as file:
+    words = [line.strip() for line in file.readlines() if line.strip() in embeddings]
 
 target_word = random.choice(words)
 
@@ -223,7 +226,7 @@ def play_contexto():
             print(f"Hint: {word}, Similarity: {calculate_similarity(word, target_word, embeddings)}")
         else:
             similarity = calculate_similarity(guess, target_word, embeddings)
-            print(f"Your guess: {guess}, Similarity: {similarity:.4f}")
+            print(f"Your guess: {guess}, Similarity: {similarity}")
 
         attempts += 1
 
