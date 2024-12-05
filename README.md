@@ -1,20 +1,52 @@
-<H1> COP3530 - Project 3 </h1>
-How to run our project on your computer. 
+<h1> COP3530 - Project 3 </h1>
+<p> How to run our project on your computer. </p>
+
 <h2> Steps </h2>
-1. Make sure you have Python installed on your computer. 
-2. Create a virtual enviroment to install all of our installations by...(running these commands on your CLI after cloning repository)
-	a. (bash) -- run this --> python -m venv venv
- 	b. (windows) -- run this --> venv\Scripts\activate
-  	c. (mac) -- run this --> source venv/bin/activate
-3. Now that you're in the virtual enviroment, install all requirements by...
-	a. pip install -r requirements.txt
-4. Next install front end dependencies
-	a. npm install
-5. Great! Now you can start the backend server
-	a. python backend/main.py
- 	b. (or) --> pyhton3 backend/main.py
-6. Now that backend is running, time to run the frontend server
-	a. npm run dev -- --open
-7. Now the local host should open up a tab on your computer, and there you can play our replica game!
 
+<ol>
+  <li>
+    <strong>Make sure you have Python installed on your computer.</strong>
+  </li>
 
+  <li>
+    <strong>Create a virtual environment to install all of our installations by running these commands on your CLI after cloning the repository:</strong>
+    <ul>
+      <li><strong>(bash)</strong> -- run this command:</li>
+      <pre><code>python -m venv venv</code></pre>
+      <li><strong>(Windows)</strong> -- run this command:</li>
+      <pre><code>venv\Scripts\activate</code></pre>
+      <li><strong>(Mac)</strong> -- run this command:</li>
+      <pre><code>source venv/bin/activate</code></pre>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Now that you're in the virtual environment, install all required dependencies by running:</strong>
+    <pre><code>pip install -r requirements.txt</code></pre>
+  </li>
+
+  <li>
+    <strong>Next, install the front-end dependencies:</strong>
+    <pre><code>npm install</code></pre>
+  </li>
+
+  <li>
+    <strong>Great! Now you can start the backend server:</strong>
+    <ul>
+      <li><pre><code>python backend/main.py</code></pre></li>
+      <li>Or alternatively, if you're using Python 3:</li>
+      <li><pre><code>python3 backend/main.py</code></pre></li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Now that the backend is running, it's time to start the frontend server:</strong>
+    <pre><code>npm run dev -- --open</code></pre>
+  </li>
+
+  <li>
+    <strong>Once the frontend server is running, your browser will open automatically, and you can play our replica game!</strong>
+  </li>
+</ol>
+
+<h3>Enjoy the game and let us know if you have any issues!</h3>
